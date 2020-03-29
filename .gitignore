@@ -1,0 +1,9 @@
+vendor/
+build/
+.vscode
+.DS_Store
+.envrc
+resources/ssl
+config.json
+endpoints.json
+*.log

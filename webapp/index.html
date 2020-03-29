@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marvin UI</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div id="app">
+
+        <h2>AlexaServer</h2>
+        <button @click="updateState">Refresh</button>
+        <p>{{ serverState }}</p>
+        <button @click="startServer">Start</button>
+        <button @click="stopServer">Stop</button>
+        
+        <h2>Log</h2>
+        <button @click="updateLog">Refresh</button>
+        <p>
+            <template v-for="line in log">
+                <span>{{line}}</span><br>
+            </template>
+        </p>
+    </div>
+</body>
+
+<script lang="javascript">
+    var vm = new Vue({
+        el: '#app',
+
+        data: function() {
+            return {
+                serverState: "unknown",
+                log: []
+            };
+        },
+
+        created() {
+            this.updateState();
+            this.updateLog();
+        },
+
+        methods: {
+            updateState(event) {
+                self = this;
+
+                axios.get("/api/alexa/state").then(function(response) {
+                    self.serverState = response.data.state;
+                }).catch(function(err) {
+                    self.serverState = err;
+                });
+            },
+
+            updateLog(event) {
+                self = this;
+
+                axios.get("/api/log?limit=100").then(function(response) {
+                    self.log = response.data.lines.reverse();
+                }).catch(function(err) {
+                    self.log = [err.String()];
+                });
+            },
+
+            changeState(state) {
+                self = this;
+                axios.post(`/api/alexa/state?set=${state}`).then(function(response) {
+                    self.serverState = state;
+                }).catch(function(err) {
+                    self.serverState = err.response.data.error || err;
+                });
+            },
+
+            startServer() {
+                this.changeState("running");
+            },
+
+            stopServer() {
+                this.changeState("stopped");
+            },
+        }
+    })
+</script>
+
+</html>
