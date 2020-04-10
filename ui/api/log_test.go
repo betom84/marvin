@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"marvin/config"
+	"marvin/logger"
 	"marvin/ui/api"
 	"net/http"
 	"net/http/httptest"
@@ -13,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -152,4 +154,42 @@ func invokeHttp(t *testing.T, query string, response interface{}) int {
 	assert.NoError(t, err)
 
 	return w.Code
+}
+
+func TestHandleLogSocket(t *testing.T) {
+	sampleLog, _ := ioutil.TempFile("", "sampleLog")
+	mw := logger.NewLogMultiWriter(sampleLog.Name())
+
+	server := httptest.NewServer(TestHandler{
+		t:          t,
+		handleFunc: api.HandleLogSocket(mw),
+	})
+	defer server.Close()
+
+	dialer := websocket.Dialer{}
+	header := make(http.Header)
+
+	wsUrl := strings.ReplaceAll(server.URL+"/api/log/socket", "http", "ws")
+
+	ws, _, err := dialer.Dial(wsUrl, header)
+	defer ws.Close()
+	assert.NoError(t, err)
+
+	mw.Write([]byte("Hello world!\n"))
+
+	mt, bytes, err := ws.ReadMessage()
+	assert.NoError(t, err)
+
+	assert.Equal(t, websocket.TextMessage, mt)
+	assert.Equal(t, "Hello world!\n", string(bytes))
+}
+
+type TestHandler struct {
+	t          *testing.T
+	handleFunc func(w http.ResponseWriter, r *http.Request) error
+}
+
+func (th TestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	err := th.handleFunc(w, r)
+	assert.NoError(th.t, err)
 }

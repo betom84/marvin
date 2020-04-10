@@ -39,7 +39,7 @@ var (
 func newConfiguration() Configuration {
 	return Configuration{
 		AlexaServerPort:    6443,
-		UIServerPort:       8080,
+		UIServerPort:       8081,
 		ValidationEnabled:  false,
 		ValidationSchema:   "./resources/schema.json",
 		SSLCertificate:     "./resources/ssl/certificate.pem",

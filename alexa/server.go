@@ -145,7 +145,7 @@ func (server *Server) Stop() error {
 		server.httpServer = nil
 	}
 
-	log.Printf("Stopped AlexaServer\n")
+	log.Printf("stopped AlexaServer\n")
 
 	return err
 }

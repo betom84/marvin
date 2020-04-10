@@ -5,11 +5,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
 
 	"marvin/config"
+	"marvin/logger"
+
+	"github.com/gorilla/websocket"
 )
 
 func HandleLogGet() func(w http.ResponseWriter, r *http.Request) error {
@@ -44,7 +48,7 @@ func HandleLogGet() func(w http.ResponseWriter, r *http.Request) error {
 func getLatestLogMessages(limit, offset uint) ([]string, error) {
 
 	logFilePath := config.Get().Log
-	if logFilePath == "stdout" {
+	if logFilePath == "" || logFilePath == "stdout" {
 		return []string{}, nil
 	}
 
@@ -93,4 +97,54 @@ func getLatestLogMessages(limit, offset uint) ([]string, error) {
 	}
 
 	return entries[sliceStart : len(entries)-int(offset)], nil
+}
+
+func HandleLogSocket(mw *logger.LogMultiWriter) func(w http.ResponseWriter, r *http.Request) error {
+	upgrader := websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			// todo, only in dev mode
+			return true
+		},
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) error {
+		ws, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return err
+		}
+		defer ws.Close()
+
+		pr, pw := io.Pipe()
+		defer pr.Close()
+		defer pw.Close()
+
+		mw.Append(pw)
+		defer mw.Remove(pw)
+
+		reader := bufio.NewReader(pr)
+		for {
+			line, err := reader.ReadBytes('\n')
+			if err != nil {
+				break
+			}
+
+			err = ws.WriteMessage(websocket.TextMessage, line)
+			if err != nil {
+				break
+			}
+		}
+
+		return err
+	}
+}
+
+func HandleLogPut() func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		message := r.FormValue("message")
+		if message != "" {
+			log.Println(message)
+		}
+
+		return nil
+	}
 }

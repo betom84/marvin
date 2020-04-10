@@ -26,6 +26,10 @@ func (r *router) post(uri string, f handlerFuncWithError) {
 	r.handlers[fmt.Sprintf("%s:%s", http.MethodPost, uri)] = f
 }
 
+func (r *router) put(uri string, f handlerFuncWithError) {
+	r.handlers[fmt.Sprintf("%s:%s", http.MethodPut, uri)] = f
+}
+
 func (r *router) serveHTTP(w http.ResponseWriter, req *http.Request) error {
 	if f, ok := r.handlers[fmt.Sprintf("%s:%s", req.Method, req.URL.Path)]; ok {
 		return f(w, req)

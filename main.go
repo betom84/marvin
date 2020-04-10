@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -13,34 +12,19 @@ import (
 	"marvin/config"
 	"marvin/devices/homematic"
 	"marvin/devices/hue"
+	"marvin/logger"
 	"marvin/ui"
 
 	"github.com/betom84/go-alexa/smarthome"
 )
 
-func init() {
-	initLog()
-}
-
-func initLog() {
-	var err error
-	var writer io.Writer = os.Stdout
-
-	logOutput := config.Get().Log
-	if logOutput != "" && logOutput != "stdout" {
-		writer, err = os.OpenFile(logOutput, syscall.O_RDWR|syscall.O_CREAT|syscall.O_APPEND, 0666)
-		if err != nil {
-			panic(fmt.Errorf("could not create log '%s'; %s", logOutput, err))
-		}
-	}
+func main() {
+	writer := logger.NewLogMultiWriter(config.Get().Log)
 
 	log.SetFlags(log.LstdFlags)
 	log.SetOutput(writer)
-
 	smarthome.Log = smarthome.NewDefaultLogger(smarthome.Trace, writer)
-}
 
-func main() {
 	var sigChan = make(chan os.Signal)
 	signal.Notify(sigChan, syscall.SIGTERM)
 	signal.Notify(sigChan, syscall.SIGINT)
@@ -51,7 +35,7 @@ func main() {
 		log.Printf("failed to start alexa server; %s\n", err)
 	}
 
-	startUIServer(alexaServer)
+	startUIServer(alexaServer, writer)
 
 	sig := <-sigChan
 	log.Printf("exiting due of signal %+v...\n", sig)
@@ -85,8 +69,8 @@ func newAlexaServer() *alexa.Server {
 	return server
 }
 
-func startUIServer(a *alexa.Server) {
-	server := ui.NewServer(a)
+func startUIServer(a *alexa.Server, mw *logger.LogMultiWriter) {
+	server := ui.NewServer(a, mw)
 
 	go func() {
 		log.Printf("starting ui on :%d\n", config.Get().UIServerPort)
