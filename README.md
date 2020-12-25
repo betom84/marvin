@@ -99,34 +99,34 @@ Check [optional marvin-ui](https://github.com/betom84/marvin-ui) for more UI fea
   "sslKey": "./resources/ssl/private-key.pem",
   "amazonClientID": "amzn1.application-oa2-client....",
   "amazonClientSecret": "...",
-  "restrictedUsers": ["john@mail.com"],
+  "restrictedUser": "john@mail.com",
   "basicAuthUser": "user",
   "basicAuthPassword": "password",
   "philipsHueHost": "philips-hue",
-  "philipsHueUser": "...",
+  "philipsHueUser": "$ANY_ENV_VARIABLE",
   "homematicHost": "homematic-ccu3"
 }
 ```
 
-| Key                  | Type           | Description                                                                                      | Default                         |
-| -------------------- | -------------- | ------------------------------------------------------------------------------------------------ | ------------------------------- |
-| `alexaServerPort`    | Port           | Port to listen for alexa directives (optional)                                                   | 6443                            |
-| `uiServerPort`       | Port           | Port to serve web-ui (optional)                                                                  | 8081                            |
-| `uiRoot`             | Folder         | UI web-root folder (optional)                                                                    | ./webapp                        |
-| `log`                | File           | Logfile (optional)                                                                               | stdout                          |
-| `endpoints`          | File           | Device configuration (required)                                                                  | ./config/endpoints.json         |
-| `validationEnabled`  | Boolean        | Enable schema validation for alexa responses (debugging)                                         | false                           |
-| `validationSchema`   | File           | [Schema](https://github.com/alexa/alexa-smarthome/wiki/Validation-Schemas) to use for validation | ./resources/schema.json         |
-| `sslCertificate`     | File           | SSL certificate to use HTTPS                                                                     | ./resources/ssl/certificate.pem |
-| `sslKey`             | File           | SSL certificate private key                                                                      | ./resources/ssl/private-key.pem |
-| `amazonClientID`     | String         | Amazon Client ID                                                                                 | \$MARVIN_AMAZON_CLIENT_ID       |
-| `amazonClientSecret` | String         | Amazon Client Secret                                                                             | \$MARVIN_AMAZON_CLIENT_SECRET   |
-| `restrictedUsers`    | List of E-Mail | Restrict access to certain amazon user profiles                                                  | \$MARVIN_BASIC_AUTH_USER        |
-| `basicAuthUser`      | String         | Username for basic authentication to use with AWS Lambda proxy function                          | \$MARVIN_BASIC_AUTH_PASSWORD    |
-| `basicAuthPassword`  | String         | Password for basic authentication to use with AWS Lambda proxy function                          | \$MARVIN_RESTRICTED_USERS (CSV) |
-| `philipsHueHost`     | Hostname/IP    | Hostname/IP of Philips Hue Bridge                                                                | philips-hue                     |
-| `philipsHueUser`     | String         | User to access Philips Hue Bridge                                                                | \$MARVIN_PHILIPSHUE_USER        |
-| `homematicHost`      | Hostname/IP    | Hostname/IP of Homematic CCU/RaspberryMatic                                                      | homematic-ccu3                  |
+| Key                  | Type        | Description                                                                                      | Default                         |
+| -------------------- | ----------- | ------------------------------------------------------------------------------------------------ | ------------------------------- |
+| `alexaServerPort`    | Port        | Port to listen for alexa directives (optional)                                                   | 6443                            |
+| `uiServerPort`       | Port        | Port to serve web-ui (optional)                                                                  | 8081                            |
+| `uiRoot`             | Folder      | UI web-root folder (optional)                                                                    | ./webapp                        |
+| `log`                | File        | Logfile (optional)                                                                               | stdout                          |
+| `endpoints`          | File        | Device configuration (required)                                                                  | ./config/endpoints.json         |
+| `validationEnabled`  | Boolean     | Enable schema validation for alexa responses (debugging)                                         | false                           |
+| `validationSchema`   | File        | [Schema](https://github.com/alexa/alexa-smarthome/wiki/Validation-Schemas) to use for validation | ./resources/schema.json         |
+| `sslCertificate`     | File        | SSL certificate to use HTTPS                                                                     | ./resources/ssl/certificate.pem |
+| `sslKey`             | File        | SSL certificate private key                                                                      | ./resources/ssl/private-key.pem |
+| `amazonClientID`     | String      | Amazon Client ID                                                                                 | \$MARVIN_AMAZON_CLIENT_ID       |
+| `amazonClientSecret` | String      | Amazon Client Secret                                                                             | \$MARVIN_AMAZON_CLIENT_SECRET   |
+| `restrictedUser`     | String      | Restrict access to certain amazon user profiles                                                  | \$MARVIN_RESTRICTED_USER        |
+| `basicAuthUser`      | String      | Username for basic authentication to use with AWS Lambda proxy function                          | \$MARVIN_BASIC_AUTH_USER        |
+| `basicAuthPassword`  | String      | Password for basic authentication to use with AWS Lambda proxy function                          | \$MARVIN_BASIC_AUTH_PASSWORD    |
+| `philipsHueHost`     | Hostname/IP | Hostname/IP of Philips Hue Bridge                                                                | philips-hue                     |
+| `philipsHueUser`     | String      | User to access Philips Hue Bridge                                                                | \$MARVIN_PHILIPSHUE_USER        |
+| `homematicHost`      | Hostname/IP | Hostname/IP of Homematic CCU/RaspberryMatic                                                      | homematic-ccu3                  |
 
 > Note: Since we are using Basic-Auth to authorize requests it's highly recommed to configure SSL to use HTTPS!
 
