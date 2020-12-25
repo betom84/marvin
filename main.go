@@ -55,7 +55,7 @@ func newAlexaServer() *alexa.Server {
 	server.BasicAuthPassword = config.BasicAuthPassword
 	server.ValidationEnabled = config.ValidationEnabled
 	server.ValidationSchema = config.ValidationSchema
-	server.RestrictedUsers = config.RestrictedUsers
+	server.RestrictedUsers = []string{config.RestrictedUser}
 	server.Endpoints = config.Endpoints
 
 	server.NewDeviceFunc("homematic", func(id int) interface{} {

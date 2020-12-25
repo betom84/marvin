@@ -1,13 +1,26 @@
 package api
 
 import (
-	"io/ioutil"
+	"encoding/json"
+	"marvin/config"
 	"net/http"
 )
 
+type configGetResponse struct {
+	Current config.Configuration `json:"current"`
+	Raw     config.Configuration `json:"raw"`
+	Default config.Configuration `json:"default"`
+}
+
 func HandleConfigGet() func(w http.ResponseWriter, r *http.Request) error {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		content, err := ioutil.ReadFile("config/config.json")
+		configGetResponse := configGetResponse{
+			Current: config.Get(),
+			Raw:     config.GetRaw(),
+			Default: config.GetDefault(),
+		}
+
+		content, err := json.MarshalIndent(configGetResponse, "", "   ")
 		if err != nil {
 			return err
 		}
