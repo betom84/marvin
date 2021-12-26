@@ -6,12 +6,12 @@ import (
 	"net/http"
 )
 
-func HandleAlexaStateGet(a *alexa.Server) func(w http.ResponseWriter, r *http.Request) error {
+func HandleAlexaStateGet(a *alexa.Server) http.HandlerFunc {
 	var response = struct {
 		State string `json:"state"`
 	}{}
 
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) {
 		response.State = "stopped"
 		if a.IsRunning() {
 			response.State = "running"
@@ -19,13 +19,11 @@ func HandleAlexaStateGet(a *alexa.Server) func(w http.ResponseWriter, r *http.Re
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
-
-		return nil
 	}
 }
 
-func HandleAlexaStateSet(a *alexa.Server) func(w http.ResponseWriter, r *http.Request) error {
-	return func(w http.ResponseWriter, r *http.Request) error {
+func HandleAlexaStateSet(a *alexa.Server) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		var err error
 
 		switch r.URL.Query().Get("set") {
@@ -35,6 +33,8 @@ func HandleAlexaStateSet(a *alexa.Server) func(w http.ResponseWriter, r *http.Re
 			err = a.Stop()
 		}
 
-		return err
+		if err != nil {
+			panic(err)
+		}
 	}
 }

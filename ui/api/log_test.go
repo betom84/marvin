@@ -160,10 +160,7 @@ func TestHandleLogSocket(t *testing.T) {
 	sampleLog, _ := ioutil.TempFile("", "sampleLog")
 	mw := logger.NewLogMultiWriter(sampleLog.Name())
 
-	server := httptest.NewServer(TestHandler{
-		t:          t,
-		handleFunc: api.HandleLogSocket(mw),
-	})
+	server := httptest.NewServer(api.HandleLogSocket(mw))
 	defer server.Close()
 
 	dialer := websocket.Dialer{}
@@ -182,14 +179,4 @@ func TestHandleLogSocket(t *testing.T) {
 
 	assert.Equal(t, websocket.TextMessage, mt)
 	assert.Equal(t, "Hello world!\n", string(bytes))
-}
-
-type TestHandler struct {
-	t          *testing.T
-	handleFunc func(w http.ResponseWriter, r *http.Request) error
-}
-
-func (th TestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	err := th.handleFunc(w, r)
-	assert.NoError(th.t, err)
 }
