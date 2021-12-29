@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"marvin/metrics"
 	"net/http"
 	"strconv"
 
@@ -18,6 +19,9 @@ type Device struct {
 
 // State retrieves the current state of the homematic device
 func (d Device) State() (bool, error) {
+	var err error
+	defer metrics.CollectDeviceOperationDuration(fmt.Sprintf("homematic-%d", d.iseID), "State", err)()
+
 	r, err := http.Get(fmt.Sprintf("http://%s/addons/xmlapi/state.cgi?datapoint_id=%d", d.host, d.iseID))
 	if err != nil {
 		return false, err
@@ -43,6 +47,9 @@ func (d Device) State() (bool, error) {
 
 // SetState change the current state of the homematic device
 func (d Device) SetState(value bool) (bool, error) {
+	var err error
+	defer metrics.CollectDeviceOperationDuration(fmt.Sprintf("homematic-%d", d.iseID), "SetState", err)()
+
 	r, err := http.Get(fmt.Sprintf("http://%s/addons/xmlapi/statechange.cgi?ise_id=%d&new_value=%s", d.host, d.iseID, d.boolToState(value)))
 	if err != nil {
 		return false, err
