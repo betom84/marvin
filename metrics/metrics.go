@@ -3,6 +3,7 @@ package metrics
 import (
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/middleware"
@@ -10,29 +11,65 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var (
-	registry = prometheus.DefaultRegisterer
+type Meter interface {
+	Register(r prometheus.Registerer)
+}
 
-	requestsTotal = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "http_requests_total",
-			Help: "Total number of http requests by method, endpoint and statusCode",
-		},
-		[]string{"method", "endpoint", "statusCode"},
+type meter struct {
+	sync.Once
+
+	registerer              prometheus.Registerer
+	requestsTotal           *prometheus.CounterVec
+	requestDuration         *prometheus.HistogramVec
+	deviceOperationDuration *prometheus.HistogramVec
+}
+
+var singleton = meter{}
+
+func Instance() Meter {
+	return instance()
+}
+
+func instance() *meter {
+	singleton.Do(func() {
+		singleton.requestsTotal = prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "http_requests_total",
+				Help: "Total number of http requests by method, endpoint and statusCode",
+			},
+			[]string{"method", "endpoint", "statusCode"},
+		)
+
+		singleton.requestDuration = prometheus.NewHistogramVec(
+			prometheus.HistogramOpts{
+				Name:    "http_request_duration_milliseconds",
+				Help:    "Http request duration in milliseconds by method, endpoint and statusCode",
+				Buckets: prometheus.ExponentialBuckets(5, 2, 10),
+			},
+			[]string{"method", "endpoint", "statusCode"},
+		)
+
+		singleton.deviceOperationDuration = prometheus.NewHistogramVec(
+			prometheus.HistogramOpts{
+				Name:    "application_device_operation_duration_milliseconds",
+				Help:    "Device operation duration in milliseconds by device and operation",
+				Buckets: prometheus.ExponentialBuckets(5, 2, 10),
+			},
+			[]string{"device", "operation", "failed"},
+		)
+		singleton.Register(prometheus.DefaultRegisterer)
+	})
+
+	return &singleton
+}
+
+func (m *meter) Register(r prometheus.Registerer) {
+	m.registerer = r
+	m.registerer.MustRegister(
+		m.requestsTotal,
+		m.requestDuration,
+		m.deviceOperationDuration,
 	)
-
-	requestDuration = prometheus.NewSummaryVec(
-		prometheus.SummaryOpts{
-			Name:       "http_request_duration_milliseconds",
-			Help:       "Http request duration in milliseconds by method, endpoint and statusCode",
-			Objectives: map[float64]float64{0.9: 0.01, 0.95: 0.005, 0.99: 0.001},
-		},
-		[]string{"method", "endpoint", "statusCode"},
-	)
-)
-
-func init() {
-	registry.MustRegister(requestsTotal, requestDuration)
 }
 
 func Middleware(next http.Handler) http.Handler {
@@ -47,8 +84,8 @@ func Middleware(next http.Handler) http.Handler {
 				"statusCode": fmt.Sprint(wrapped.Status()),
 			}
 
-			requestsTotal.With(labels).Inc()
-			requestDuration.With(labels).Observe(float64(time.Now().UnixMilli() - startTime.UnixMilli()))
+			instance().requestsTotal.With(labels).Inc()
+			instance().requestDuration.With(labels).Observe(float64(time.Now().UnixMilli() - startTime.UnixMilli()))
 		}()
 
 		next.ServeHTTP(wrapped, r)
@@ -57,4 +94,16 @@ func Middleware(next http.Handler) http.Handler {
 
 func Handler() http.Handler {
 	return promhttp.Handler()
+}
+
+func CollectDeviceOperationDuration(device, op string, err error) func() {
+	opStartMs := time.Now().UnixMilli()
+
+	return func() {
+		instance().deviceOperationDuration.With(prometheus.Labels{
+			"device":    device,
+			"operation": op,
+			"failed":    fmt.Sprint(bool(err != nil)),
+		}).Observe(float64(time.Now().UnixMilli() - opStartMs))
+	}
 }
