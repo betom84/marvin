@@ -3,6 +3,7 @@ package hue
 import (
 	"encoding/json"
 	"fmt"
+	"marvin/metrics"
 	"net/http"
 	"strings"
 )
@@ -43,6 +44,9 @@ type getStateResponse struct {
 
 // State retrieves the current state of the hue light
 func (l Light) State() (bool, error) {
+	var err error
+	defer metrics.CollectDeviceOperationDuration(fmt.Sprintf("hue-%d", l.lightID), "State", err)()
+
 	r, err := http.Get(l.getURL())
 	if err != nil {
 		return false, err
@@ -59,7 +63,7 @@ func (l Light) State() (bool, error) {
 }
 
 func (l Light) getURL() string {
-	return fmt.Sprintf("http://%s/api/%s/lights/%d/state", l.host, l.user, l.lightID)
+	return fmt.Sprintf("http://%s/api/%s/lights/%d", l.host, l.user, l.lightID)
 }
 
 type setStateResponse []struct {
@@ -68,9 +72,12 @@ type setStateResponse []struct {
 
 // SetState change the current state of the light
 func (l Light) SetState(value bool) (bool, error) {
+	var err error
+	defer metrics.CollectDeviceOperationDuration(fmt.Sprintf("hue-%d", l.lightID), "SetState", err)()
+
 	req, err := http.NewRequest(
 		"PUT",
-		l.getURL(),
+		fmt.Sprintf("%s/state", l.getURL()),
 		strings.NewReader(fmt.Sprintf(`{ "on": %v }`, value)))
 
 	if err != nil {

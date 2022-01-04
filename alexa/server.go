@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"marvin/metrics"
 	"net/http"
 	"os"
 	"strconv"
@@ -56,7 +57,7 @@ func (server *Server) Start() error {
 	}
 
 	handler := http.NewServeMux()
-	handler.Handle("/", smarthomeHandler)
+	handler.Handle("/", metrics.Middleware(smarthomeHandler))
 
 	server.httpServer = &http.Server{
 		Addr:    server.Addr,

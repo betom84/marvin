@@ -5,15 +5,14 @@ import (
 	"net/http"
 )
 
-func HandleConfigGet() func(w http.ResponseWriter, r *http.Request) error {
-	return func(w http.ResponseWriter, r *http.Request) error {
+func HandleConfigGet() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		content, err := ioutil.ReadFile("config/config.json")
 		if err != nil {
-			return err
+			panic(err)
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(content)
-		return nil
 	}
 }

@@ -16,13 +16,13 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func HandleLogGet() func(w http.ResponseWriter, r *http.Request) error {
+func HandleLogGet() http.HandlerFunc {
 
 	var response = struct {
 		Lines []string `json:"lines"`
 	}{}
 
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) {
 
 		offset, _ := strconv.ParseUint(r.URL.Query().Get("offset"), 10, 0)
 		limit, _ := strconv.ParseUint(r.URL.Query().Get("limit"), 10, 0)
@@ -33,14 +33,12 @@ func HandleLogGet() func(w http.ResponseWriter, r *http.Request) error {
 
 		lines, err := getLatestLogMessages(uint(limit), uint(offset))
 		if err != nil {
-			return err
+			panic(err)
 		}
 
 		response.Lines = lines
 		json.NewEncoder(w).Encode(response)
 		w.Header().Set("Content-Type", "application/json")
-
-		return nil
 	}
 
 }
@@ -99,7 +97,7 @@ func getLatestLogMessages(limit, offset uint) ([]string, error) {
 	return entries[sliceStart : len(entries)-int(offset)], nil
 }
 
-func HandleLogSocket(mw *logger.LogMultiWriter) func(w http.ResponseWriter, r *http.Request) error {
+func HandleLogSocket(mw *logger.LogMultiWriter) http.HandlerFunc {
 	upgrader := websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			// todo, only in dev mode
@@ -107,10 +105,10 @@ func HandleLogSocket(mw *logger.LogMultiWriter) func(w http.ResponseWriter, r *h
 		},
 	}
 
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ws, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			return err
+			panic(err)
 		}
 		defer ws.Close()
 
@@ -134,17 +132,17 @@ func HandleLogSocket(mw *logger.LogMultiWriter) func(w http.ResponseWriter, r *h
 			}
 		}
 
-		return err
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
-func HandleLogPut() func(w http.ResponseWriter, r *http.Request) error {
-	return func(w http.ResponseWriter, r *http.Request) error {
+func HandleLogPut() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		message := r.FormValue("message")
 		if message != "" {
 			log.Println(message)
 		}
-
-		return nil
 	}
 }

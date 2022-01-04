@@ -19,7 +19,7 @@ func TestConfig(t *testing.T) {
 	assert.Equal(t, "clientID", Get().AmazonClientID)
 
 	// consider defaults
-	assert.Equal(t, 8080, Get().UIServerPort)
+	assert.Equal(t, 8081, Get().UIServerPort)
 	assert.Equal(t, 6443, Get().AlexaServerPort)
 
 	// consider config from env

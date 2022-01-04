@@ -23,14 +23,14 @@ build:
 
 build-rpi:
 	make pre-build
-	if [ -f $(TARGET)_rpi ]; then rm $(TARGET)_rpi; fi;
+	@if [ -f $(TARGET)_rpi ]; then rm $(TARGET)_rpi; fi;
 	GOOS=linux GOARCH=arm GOARM=6 go build -v -o $(TARGET)_rpi
 
 .PHONY: resources
 resources:
 	make pre-build
-	@test -f config.json && cp -v config.json $(BUILD_DIR)/config
-	@test -f endpoints.json && cp -v endpoints.json $(BUILD_DIR)/config
+	@if [ -f config.json ]; then cp -v config.json $(BUILD_DIR)/config; fi;
+	@if [ -f endpoints.json ]; then cp -v endpoints.json $(BUILD_DIR)/config; fi;
 	@cp -rv webapp $(BUILD_DIR)
 	@cp -rv resources $(BUILD_DIR)
 

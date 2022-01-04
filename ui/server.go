@@ -2,10 +2,10 @@ package ui
 
 import (
 	"fmt"
-	"log"
 	"marvin/alexa"
 	"marvin/config"
 	"marvin/logger"
+	"marvin/metrics"
 	"marvin/ui/api"
 	"net/http"
 	"os"
@@ -37,32 +37,38 @@ func (s *Server) routes() {
 	s.router.get("/api/config", api.HandleConfigGet())
 	s.router.get("/api/endpoint", api.HandleEndpointsGet())
 
+	s.router.get("/metrics", func(w http.ResponseWriter, r *http.Request) {
+		metrics.Handler().ServeHTTP(w, r)
+	})
+
 	s.router.fallback = handleIndex()
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	err := s.router.serveHTTP(w, r)
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered ", r)
 
-	if err != nil {
-		log.Println(err)
+			w.Header().Add("content-type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf(`{ "error": "%s" }`, r)))
+		}
+	}()
 
-		w.Header().Add("content-type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf(`{ "error": "%s" }`, err.Error())))
-	}
+	s.router.serveHTTP(w, r)
 }
 
-func handleIndex() handlerFuncWithError {
+func handleIndex() http.HandlerFunc {
 	var index = filepath.Join(fmt.Sprintf("%s/index.html", config.Get().UIRoot))
 
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) {
 		if config.Get().UIRoot == "" {
-			return fmt.Errorf("UI not configured")
+			panic(fmt.Errorf("UI not configured"))
 		}
 
 		path, err := filepath.Abs(r.URL.Path)
 		if err != nil {
-			return err
+			panic(err)
 		}
 
 		path = filepath.Join(config.Get().UIRoot, path)
@@ -70,13 +76,13 @@ func handleIndex() handlerFuncWithError {
 		_, err = os.Stat(path)
 		if os.IsNotExist(err) {
 			http.ServeFile(w, r, index)
-			return nil
+			return
 		}
+
 		if err != nil {
-			return err
+			panic(err)
 		}
 
 		http.FileServer(http.Dir(config.Get().UIRoot)).ServeHTTP(w, r)
-		return nil
 	}
 }
