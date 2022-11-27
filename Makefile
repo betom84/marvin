@@ -51,3 +51,9 @@ endif
 	ssh pi@${RPI_HOST} sudo systemctl start marvin
 	make clean
 
+.PHONY: docker
+docker:
+	make resources
+	docker build -f docker/Dockerfile -t marvin:latest .
+	docker image tag marvin:latest ${DOCKER_REGISTRY}/marvin:latest
+	docker image push ${DOCKER_REGISTRY}/marvin
