@@ -9,7 +9,6 @@ import (
 	"marvin/metrics"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/betom84/go-alexa/smarthome"
@@ -17,7 +16,7 @@ import (
 	"github.com/betom84/go-alexa/smarthome/validator"
 )
 
-type DeviceHandlerFunc func(id int) interface{}
+type DeviceHandlerFunc func(id string) (interface{}, error)
 
 // Server to process alexa directives
 type Server struct {
@@ -166,10 +165,5 @@ func (server Server) NewDevice(epType string, id string) (interface{}, error) {
 		return nil, fmt.Errorf("unable to instantiate device for endpoint type %s, id %s", epType, id)
 	}
 
-	iid, err := strconv.Atoi(id)
-	if err != nil {
-		return nil, fmt.Errorf("unable to instantiate device; %s", err)
-	}
-
-	return h(iid), nil
+	return h(id)
 }

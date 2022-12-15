@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"marvin/metrics"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -99,7 +100,12 @@ func (l Light) SetState(value bool) (bool, error) {
 	return resp[0].Success[fmt.Sprintf("/lights/%d/state/on", l.lightID)].(bool), nil
 }
 
-// NewLight creates a hue light instance based on the lightID
-func NewLight(lightID int, host string, user string) Light {
-	return Light{lightID: lightID, host: host, user: user}
+// NewLight creates a hue light instance based on the id (lightID)
+func NewLight(id string, host string, user string) (Light, error) {
+	lightID, err := strconv.Atoi(id)
+	if err != nil {
+		return Light{}, fmt.Errorf("unable to instantiate device; %s", err)
+	}
+
+	return Light{lightID: lightID, host: host, user: user}, nil
 }

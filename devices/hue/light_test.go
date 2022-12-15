@@ -13,6 +13,8 @@ import (
 )
 
 func TestLight(t *testing.T) {
+	light, _ := hue.NewLight("3", config.Get().PhilipsHueHost, config.Get().PhilipsHueUser)
+
 	tt := []struct {
 		name    string
 		light   hue.Light
@@ -20,7 +22,7 @@ func TestLight(t *testing.T) {
 	}{
 		{
 			name:  "Change state of light 3",
-			light: hue.NewLight(3, config.Get().PhilipsHueHost, config.Get().PhilipsHueUser),
+			light: light,
 			metrics: map[string]int{
 				"application_device_operation_duration_milliseconds": 2,
 			},

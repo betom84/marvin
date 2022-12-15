@@ -1,8 +1,7 @@
-package homematic_test
+package shelly_test
 
 import (
-	"marvin/config"
-	"marvin/devices/homematic"
+	"marvin/devices/shelly"
 	"marvin/metrics"
 	"testing"
 	"time"
@@ -13,14 +12,14 @@ import (
 )
 
 func TestDevice(t *testing.T) {
-	device, _ := homematic.NewDevice("2195", config.Get().HomematicHost)
+	device, _ := shelly.NewDevice("shelly1-244cab43abbe")
 
 	tt := []struct {
 		name   string
-		device homematic.Device
+		device shelly.Device
 	}{
 		{
-			name:   "Change state of datapointIseID",
+			name:   "Change state of shelly device",
 			device: device,
 		},
 	}

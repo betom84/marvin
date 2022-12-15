@@ -12,6 +12,7 @@ import (
 	"marvin/config"
 	"marvin/devices/homematic"
 	"marvin/devices/hue"
+	"marvin/devices/shelly"
 	"marvin/logger"
 	"marvin/ui"
 
@@ -58,12 +59,16 @@ func newAlexaServer() *alexa.Server {
 	server.RestrictedUsers = config.RestrictedUsers
 	server.Endpoints = config.Endpoints
 
-	server.NewDeviceFunc("homematic", func(id int) interface{} {
+	server.NewDeviceFunc("homematic", func(id string) (interface{}, error) {
 		return homematic.NewDevice(id, config.HomematicHost)
 	})
 
-	server.NewDeviceFunc("hue", func(id int) interface{} {
+	server.NewDeviceFunc("hue", func(id string) (interface{}, error) {
 		return hue.NewLight(id, config.PhilipsHueHost, config.PhilipsHueUser)
+	})
+
+	server.NewDeviceFunc("shelly", func(id string) (interface{}, error) {
+		return shelly.NewDevice(id)
 	})
 
 	return server

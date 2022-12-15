@@ -86,10 +86,7 @@ func (d Device) stateToBool(v string) bool {
 	}
 
 	if f, err := strconv.ParseFloat(v, 32); err == nil {
-		if f != 0.0 {
-			return true
-		}
-		return false
+		return f != 0.0
 	}
 
 	return false
@@ -104,7 +101,12 @@ func (d Device) parseResponse(body io.Reader, target interface{}) (err error) {
 	return
 }
 
-// NewDevice creates a homematic device instance based on the given iseID
-func NewDevice(iseID int, host string) Device {
-	return Device{iseID: iseID, host: host}
+// NewDevice creates a homematic device instance based on the given id (iseID)
+func NewDevice(id string, host string) (Device, error) {
+	iseID, err := strconv.Atoi(id)
+	if err != nil {
+		return Device{}, fmt.Errorf("unable to instantiate device; %s", err)
+	}
+
+	return Device{iseID: iseID, host: host}, nil
 }
