@@ -19,7 +19,7 @@ RUN chmod u+x ./marvin
 
 EXPOSE 8080 6443
 
-VOLUME /opt/marvin/config
+#VOLUME /opt/marvin/config
 
 #ENTRYPOINT ["/bin/sh"]
 ENTRYPOINT ["/opt/marvin/marvin"]
